@@ -8,8 +8,8 @@ type RequestInterceptor = (r: AxiosRequestConfig) => AxiosRequestConfig;
 export const createRequestInterceptor = (_api: AxiosInstance) => {
   const requestInterceptor: RequestInterceptor = config => {
     const [method, url] = [config.method?.toUpperCase(), config.url];
-    console.log(method, url);
-    if (guarded.includes(`${method}${url}`)) {
+
+    if (guarded.includes(`${method} ${url}`)) {
       config.headers.authorization = getAuthFromStore(store.state.auth);
     }
     return config;
