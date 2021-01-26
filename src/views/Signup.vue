@@ -103,11 +103,10 @@ export default {
   },
   methods: {
     async signup(_evt: any) {
-      console.log(JSON.parse(JSON.stringify(this.$store.state)));
       const user: CreateUserDto = this.$data.user;
       await this.$store.dispatch<SignupActionPayload>({ type: AuthActionType.SIGNUP, payload: user });
       console.log(this.$store.state.auth.data);
-      this.$router.push('/')
+      this.$router.push('/');
     },
   },
 };
