@@ -1,4 +1,4 @@
-import { AuthStore } from "@/store/auth";
+import { AuthState } from '@/store/auth';
 
 export const getAuth = () => {
   try {
@@ -11,7 +11,7 @@ export const getAuth = () => {
   }
 };
 
-export const getAuthFromStore = (store: AuthStore) => {
+export const getAuthFromStore = (store: AuthState) => {
   const token = store.data.token;
   return token.length > 0 ? token : undefined;
 };

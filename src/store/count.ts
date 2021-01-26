@@ -2,10 +2,10 @@ import { StoreOptions, Module } from 'vuex';
 import { CountMutation } from './mutation.types';
 import { RootState } from './types';
 
-export type CountStore = { data: number };
+export type CountState = { data: number };
 export type CountStoreModule = typeof countStore;
 
-const countStore: Module<CountStore, RootState> = {
+const countStore: Module<CountState, RootState> = {
   state() {
     return { data: 0 };
   },

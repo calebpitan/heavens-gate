@@ -1,12 +1,18 @@
-import { CountStore } from './count';
-import { AuthStore } from './auth';
+import { CountState } from './count';
+import { AuthState } from './auth';
+import { CustomVue } from 'vuex';
 
 export type RootState = {
-  auth: AuthStore;
-  count: CountStore;
+  auth: AuthState;
+  count: CountState;
 };
 
-export type ActionPayload<T, P = undefined> = {
+export type ActionPayload<T, P = any> = {
   type: T;
-  payload: P;
+  payload?: P;
 };
+
+export type MapStateRecord<K extends string = string> = Record<
+  K,
+  (this: CustomVue, state: RootState, getters: any) => any
+>;
