@@ -64,7 +64,7 @@
       <div
         class="h-full w-full border-t-8 border-b-8 border-r-8 border-black rounded-r-2xl bg-auto brightness-50"
         :style="{
-          background: `url(/src/assets/signup.image.jpg)`,
+          background: `url(${imageSrc})`,
           backgroundRepeat: `no-repeat`,
           backgroundSize: `100% 100%`,
         }"
