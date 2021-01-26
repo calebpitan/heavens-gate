@@ -17,5 +17,5 @@ export class CreateUserDto {
 }
 
 export class SessionDto {
-  sid!: string
+  sid!: string;
 }

@@ -1,4 +1,4 @@
 export enum CountMutation {
   INCREMENT = 'INCREMENT',
-  DECREMENT = 'DECREMENT'
+  DECREMENT = 'DECREMENT',
 }

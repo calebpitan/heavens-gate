@@ -26,5 +26,5 @@ export const createErrorInterceptor = (api: AxiosInstance) => {
 
     return Promise.reject(err);
   };
-  return errorInterceptor
+  return errorInterceptor;
 };
