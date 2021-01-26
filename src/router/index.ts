@@ -1,5 +1,4 @@
 import { createWebHistory, createRouter, RouteRecordRaw } from 'vue-router';
-// import Signup from '../views/Signup.vue';
 import Home from '../views/Home.vue';
 
 const routes: Array<RouteRecordRaw> = [
@@ -7,6 +6,7 @@ const routes: Array<RouteRecordRaw> = [
     path: '/',
     name: 'Home',
     component: Home,
+    meta: { guarded: true },
   },
   {
     path: '/signup',
@@ -15,6 +15,6 @@ const routes: Array<RouteRecordRaw> = [
   },
 ];
 
-const router = createRouter({ history: createWebHistory(process.env.BASE_URL), routes });
+const router = createRouter({ history: createWebHistory(), routes });
 
 export default router;
