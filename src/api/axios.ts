@@ -6,7 +6,7 @@ import { AxiosRequestConfig } from 'axios';
 import { createRequestInterceptor } from './interceptors';
 
 export const heavensGate = axios.create({
-  baseURL: 'http://localhost:3000',
+  baseURL: import.meta.env.VITE_API_BASE_URL,
   timeout: 30000,
   withCredentials: true,
   headers: { accept: 'application/json' },
