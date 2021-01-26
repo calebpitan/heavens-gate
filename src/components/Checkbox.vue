@@ -9,9 +9,8 @@
     class="checkbox sr-only"
   />
   <span
-    :class="`w-4 h-4 border-2 border-gray-${
-      disabled ? 200 : 400
-    } rounded-sm transition-colors transition-shadow duration-500`"
+    :class="`w-4 h-4 border-2 ${disabled ? 'border-gray-200' : 'border-gray-400'} rounded-sm transition-colors
+  transition-shadow duration-500`"
     @click="toggle"
   />
 </template>
