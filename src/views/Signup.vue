@@ -114,46 +114,68 @@
 </template>
 
 <script lang="ts">
+import { validateOrReject, ValidationError } from 'class-validator';
 import FormOverlay from '../components/FormOverlay.vue';
+import GatePresentation from '../components/GatePresentation.vue';
 import Input from '../components/Input.vue';
 import InputLabel from '../components/InputLabel.vue';
 import Checkbox from '../components/Checkbox.vue';
 import { CreateUserDto } from '../services/auth/dto';
 import { AuthActionType, SignupActionPayload } from '../store/auth/types';
+import { copyIntoObject, resetValidation } from '../utils';
 import imageSrc from '../assets/signup.image.jpg';
 
 interface SignupData {
   user: CreateUserDto & { agreed: boolean };
+  validation: {
+    username: boolean;
+    firstname: boolean;
+    lastname: boolean;
+    email: boolean;
+    password: boolean;
+    agreed: boolean;
+  };
   [x: string]: any;
 }
 
 export default {
   name: 'Signup',
-  components: { FormOverlay, Input, InputLabel, Checkbox },
+  components: { FormOverlay, Input, InputLabel, Checkbox, GatePresentation },
   data(): SignupData {
-    return {
-      user: { username: '', firstname: '', lastname: '', email: '', password: '', agreed: false },
-      imageSrc,
-    };
+    const image = { backgroundImage: `url(${imageSrc})`, backgroundRepeat: `no-repeat` };
+    const gateImage = { ...image, backgroundSize: `auto` };
+    const presentationImage = { ...image, backgroundSize: `100% 100%` };
+    const user = { username: '', firstname: '', lastname: '', email: '', password: '', agreed: false };
+    const validation = { username: true, firstname: true, lastname: true, email: true, password: true, agreed: true };
+    const validationErrorClass = 'focus:ring-red-500';
+    return { gateImage, presentationImage, user, validation, validationErrorClass };
   },
+
   methods: {
     async signup(_evt: any) {
-      const user: CreateUserDto = this.$data.user;
-      await this.$store.dispatch<SignupActionPayload>({ type: AuthActionType.SIGNUP, payload: user });
-      this.$router.push('/');
+      const user = copyIntoObject(this.$data.user, CreateUserDto);
+      resetValidation(this.$data.validation);
+      try {
+        await validateOrReject(user);
+        const parentRefs = this.$refs as any;
+        this.$data.validation.agreed = this.$data.user.agreed;
+        if (!this.$data.validation.agreed) return parentRefs.agreedRef.$refs.input.focus();
+        await this.$store.dispatch<SignupActionPayload>({ type: AuthActionType.SIGNUP, payload: user });
+        this.$router.push('/');
+      } catch (e) {
+        return this.handleValidationError(e);
+      }
+    },
+
+    handleValidationError([e]: ValidationError[]) {
+      type RefKey = `${typeof field}Ref`;
+      const field = e.property as keyof SignupData['validation'];
+      const refKey: RefKey = `${field}Ref` as RefKey;
+      const parentRefs = this.$refs as any;
+      const childRefs = parentRefs[refKey].$refs;
+      this.$data.validation[field] = false;
+      childRefs.input.focus();
     },
   },
 };
 </script>
-
-<style lang="postcss" scoped>
-.brightness-50 {
-  filter: brightness(50%);
-}
-.clip-top-left {
-  clip-path: polygon(15% 0, 100% 0, 100% 100%, 0 100%);
-}
-.clip-bottom-right {
-  clip-path: polygon(0 0, 100% 0, 93% 100%, 0 100%);
-}
-</style>
