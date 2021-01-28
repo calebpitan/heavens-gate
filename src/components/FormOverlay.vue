@@ -1,7 +1,7 @@
 <template>
-  <div class="px-5 md:px-10 lg:px-16 py-10">
-    <form :method="method" :name="name" @submit.prevent="onSubmit">
-      <span class="block text-xl text-black text-center font-bold mb-7 -mt-2">{{ title }}</span>
+  <div :class="`${className} px-5 md:px-10 lg:px-16 py-10`">
+    <form v-bind="attrs" :method="method" :name="name">
+      <span class="block text-2xl text-black text-center font-bold mb-7 -mt-2">{{ title }}</span>
       <slot></slot>
     </form>
   </div>
@@ -10,11 +10,15 @@
 <script lang="ts">
 export default {
   name: 'FormOverlay',
+  inheritAttrs: false,
+  data() {
+    const { class: className, ...attrs } = this.$attrs;
+    return { className, attrs };
+  },
   props: {
     method: String,
     title: String,
     name: String,
-    onSubmit: Function,
   },
 };
 </script>

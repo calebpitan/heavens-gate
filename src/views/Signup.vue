@@ -1,41 +1,77 @@
 <template>
-  <div class="lg:grid grid-cols-5">
-    <div class="self-center lg:col-span-3 lg:rounded-l-md bg-white lg:m-20 py-7 clip-bottom-right">
+  <GatePresentation layerBgColor="bg-green-900" :images="[gateImage, presentationImage]" class="lg:clip-bottom-right">
+    <template v-slot:gate>
       <FormOverlay
-        class="border-2 border-gray-100 rounded-md md:mx-7"
+        class="bg-white bg-gradient-to-t from-white via-transparent to-white bg-opacity-80 border-2 border-gray-100 rounded-md md:mx-7"
         method="post"
         name="signup"
         title="Create an account"
-        :onSubmit="signup"
+        @submit.prevent="signup"
       >
         <div class="flex flex-col lg:grid grid-cols-2 lg:gap-3 space-y-4 lg:space-y-0">
           <div class="">
             <InputLabel labelFor="fname" label="First Name" />
-            <Input v-model="user.firstname" type="text" placeholder="First Name" id="fname" />
+            <Input
+              ref="firstnameRef"
+              v-model="user.firstname"
+              :class="!validation.firstname ? validationErrorClass : ''"
+              type="text"
+              placeholder="First Name"
+              id="fname"
+            />
           </div>
 
           <div class="">
             <InputLabel labelFor="lname" label="Last Name" />
-            <Input v-model="user.lastname" type="text" placeholder="Last Name" id="lname" />
+            <Input
+              ref="lastnameRef"
+              v-model="user.lastname"
+              :class="!validation.lastname ? validationErrorClass : ''"
+              type="text"
+              placeholder="Last Name"
+              id="lname"
+            />
           </div>
 
           <div class="">
             <InputLabel labelFor="uname" label="Username" />
-            <Input v-model="user.username" type="text" placeholder="Username" id="uname" />
+            <Input
+              ref="usernameRef"
+              v-model="user.username"
+              :class="!validation.username ? validationErrorClass : ''"
+              type="text"
+              placeholder="Username"
+              id="uname"
+            />
           </div>
 
           <div class="">
             <InputLabel labelFor="pwd" label="Password" />
-            <Input v-model="user.password" type="password" placeholder="Password" id="pwd" />
+            <Input
+              ref="passwordRef"
+              v-model="user.password"
+              :class="!validation.password ? validationErrorClass : ''"
+              type="password"
+              placeholder="Password"
+              id="pwd"
+            />
           </div>
 
           <div class="lg:col-span-2">
             <InputLabel labelFor="email" label="Email" />
-            <Input v-model="user.email" type="email" placeholder="Email" id="email" />
+            <Input
+              ref="emailRef"
+              v-model="user.email"
+              :class="!validation.email ? validationErrorClass : ''"
+              type="email"
+              placeholder="Email"
+              id="email"
+            />
           </div>
 
           <div class="lg:col-span-2 flex items-center">
             <Checkbox
+              ref="agreedRef"
               v-model="user.agreed"
               :checked="user.agreed"
               :aria-checked="user.agreed"
@@ -52,33 +88,29 @@
           <div class="lg:col-span-2">
             <Input
               type="submit"
-              class="bg-black text-white font-semibold border-black focus:ring-2 focus:ring-black hover:opacity-90 transition-all duration-150"
+              class="bg-black text-white font-semibold border-black shadow-lg focus:ring-2 focus:ring-black hover:opacity-90 transition-all duration-150"
               :style="{ borderColor: `black` }"
               value="Sign up"
             />
+            <div class="text-sm mt-4">
+              Already have an account?
+              <router-link to="/login" class="text-green-700 font-semibold">Sign in</router-link>
+            </div>
           </div>
         </div>
       </FormOverlay>
-    </div>
-    <div class="relative hidden lg:block lg:col-span-2 h-screen pr-4 py-4 clip-top-left">
-      <div
-        class="h-full w-full border-t-8 border-b-8 border-r-8 border-black rounded-r-2xl bg-auto brightness-50"
-        :style="{
-          background: `url(${imageSrc})`,
-          backgroundRepeat: `no-repeat`,
-          backgroundSize: `100% 100%`,
-        }"
-      ></div>
+    </template>
+
+    <template v-slot:presentation>
       <div class="absolute bottom-16 right-12 w-3/4 text-right text-lg space-y-4">
-        <h1 class="text-7xl font-bold text-white">Welcome to Heaven's Gate</h1>
+        <h1 class="text-7xl font-black text-white tracking-tight">Welcome to Heaven's Gate</h1>
         <p class="text-gray-200">
-          We are here to serve your authentication system's basic need! <br />
           Sign up to get started and gain access to the best authentication&mdash;and its brother,
           authorization&mdash;technology in the world
         </p>
       </div>
-    </div>
-  </div>
+    </template>
+  </GatePresentation>
 </template>
 
 <script lang="ts">
