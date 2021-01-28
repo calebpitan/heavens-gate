@@ -1,3 +1,17 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+html {
+  font-family: 'Inter', 'Noto Sans', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, Segoe UI, Roboto,
+    Helvetica Neue, Arial, Noto Sans, sans-serif, Apple Color Emoji, Segoe UI Emoji, Segoe UI Symbol, Noto Color Emoji;
+}
+
+@responsive {
+  .clip-top-left {
+    clip-path: polygon(15% 0, 100% 0, 100% 100%, 0 100%);
+  }
+  .clip-bottom-right {
+    clip-path: polygon(0 0, 100% 0, 92% 100%, 0 100%);
+  }
+}
