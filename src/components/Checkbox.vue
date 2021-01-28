@@ -31,6 +31,7 @@ export default {
   },
   methods: {
     toggle() {
+      this.input.focus();
       this.input.click();
     },
   },
