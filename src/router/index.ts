@@ -13,6 +13,11 @@ const routes: Array<RouteRecordRaw> = [
     name: 'Signup',
     component: () => import(/* webpackChunkName: "signup" */ '../views/Signup.vue'),
   },
+  {
+    path: '/login',
+    name: 'Login',
+    component: () => import(/* webpackChunkName: "login" */ '../views/Login.vue'),
+  },
 ];
 
 const router = createRouter({ history: createWebHistory(), routes });
