@@ -45,14 +45,14 @@ export default defineComponent({
     this.$store
       .dispatch<CheckLoggedInActionPayload>({ type: AuthActionType.CHECK_LOGGED_IN })
       .then(() => (this.$data.hasCheckedAuthStatus = true))
-      .then(() => this.guard());
+      .then(() => this.guard())
+      .catch(() => {});
   },
 });
 </script>
 
 <style>
 #app {
-  /* font-family: Avenir, Helvetica, Arial, sans-serif; */
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: #2c3e50;
