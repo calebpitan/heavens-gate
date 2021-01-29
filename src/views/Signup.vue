@@ -119,7 +119,7 @@
 import { validateOrReject, ValidationError } from 'class-validator';
 import GatePresentation from '../components/GatePresentation.vue';
 import FormOverlay from '../components/form/FormOverlay.vue';
-import ErrorMessage from '../components/form/ErrorMessage.vue';
+// import ErrorMessage from '../components/form/ErrorMessage.vue';
 import InputLabel from '../components/input/InputLabel.vue';
 import Input from '../components/input/Input.vue';
 import PasswordInput from '../components/input/PasswordInput.vue';
@@ -144,7 +144,7 @@ interface SignupData {
 
 export default {
   name: 'Signup',
-  components: { FormOverlay, ErrorMessage, Input, PasswordInput, InputLabel, Checkbox, GatePresentation },
+  components: { FormOverlay, Input, PasswordInput, InputLabel, Checkbox, GatePresentation },
   data(): SignupData {
     const image = { backgroundImage: `url(${imageSrc})`, backgroundRepeat: `no-repeat` };
     const gateImage = { ...image, backgroundSize: `auto` };
