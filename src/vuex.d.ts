@@ -7,5 +7,6 @@ declare module '@vue/runtime-core' {
     $store: ApplicationStore;
     $router: Router;
     $route: RouteLocationNormalized;
+    $refs: Record<string, any>;
   }
 }
