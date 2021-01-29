@@ -1,6 +1,7 @@
 <template>
   <GatePresentation layerBgColor="bg-green-900" :images="[gateImage, presentationImage]" class="lg:clip-bottom-right">
     <template v-slot:gate>
+      <!-- <Spinner :radius="20" stroke-width="2px" class="text-green-300" /> -->
       <FormOverlay
         class="bg-white bg-gradient-to-t from-white via-transparent to-white bg-opacity-80 border-2 border-gray-100 rounded-md md:mx-7"
         method="post"
@@ -47,10 +48,11 @@
 
           <div class="">
             <InputLabel labelFor="pwd" label="Password" />
-            <Input
-              ref="passwordRef"
+            <PasswordInput
               v-model="user.password"
-              :class="!validation.password ? validationErrorClass : ''"
+              :errored="!validation.password"
+              :errorClass="!validation.password ? validationErrorClass : ''"
+              ref="passwordRef"
               type="password"
               placeholder="Password"
               id="pwd"
@@ -69,7 +71,7 @@
             />
           </div>
 
-          <div class="lg:col-span-2 flex items-center">
+          <div class="text-white lg:col-span-2 flex items-center">
             <Checkbox
               ref="agreedRef"
               v-model="user.agreed"
@@ -79,7 +81,7 @@
               id="tnc"
             />
             <InputLabel
-              class="not-sr-only ml-4"
+              class="not-sr-only ml-4 text-gray-700 text-sm"
               labelFor="tnc"
               label="I agree to the terms of use and privacy policy"
             />
@@ -92,7 +94,7 @@
               :style="{ borderColor: `black` }"
               value="Sign up"
             />
-            <div class="text-sm mt-4">
+            <div class="text-center text-sm mt-4">
               Already have an account?
               <router-link to="/login" class="text-green-700 font-semibold">Sign in</router-link>
             </div>
@@ -115,11 +117,13 @@
 
 <script lang="ts">
 import { validateOrReject, ValidationError } from 'class-validator';
-import FormOverlay from '../components/FormOverlay.vue';
 import GatePresentation from '../components/GatePresentation.vue';
-import Input from '../components/Input.vue';
-import InputLabel from '../components/InputLabel.vue';
-import Checkbox from '../components/Checkbox.vue';
+import FormOverlay from '../components/form/FormOverlay.vue';
+import ErrorMessage from '../components/form/ErrorMessage.vue';
+import InputLabel from '../components/input/InputLabel.vue';
+import Input from '../components/input/Input.vue';
+import PasswordInput from '../components/input/PasswordInput.vue';
+import Checkbox from '../components/input/Checkbox.vue';
 import { CreateUserDto } from '../services/auth/dto';
 import { AuthActionType, SignupActionPayload } from '../store/auth/types';
 import { copyIntoObject, resetValidation } from '../utils';
@@ -140,7 +144,7 @@ interface SignupData {
 
 export default {
   name: 'Signup',
-  components: { FormOverlay, Input, InputLabel, Checkbox, GatePresentation },
+  components: { FormOverlay, ErrorMessage, Input, PasswordInput, InputLabel, Checkbox, GatePresentation },
   data(): SignupData {
     const image = { backgroundImage: `url(${imageSrc})`, backgroundRepeat: `no-repeat` };
     const gateImage = { ...image, backgroundSize: `auto` };
@@ -148,7 +152,15 @@ export default {
     const user = { username: '', firstname: '', lastname: '', email: '', password: '', agreed: false };
     const validation = { username: true, firstname: true, lastname: true, email: true, password: true, agreed: true };
     const validationErrorClass = 'focus:ring-red-500';
-    return { gateImage, presentationImage, user, validation, validationErrorClass };
+    return { gateImage, presentationImage, user, validation, validationErrorClass, errorMessage: null };
+  },
+
+  mounted() {
+    document.documentElement.classList.add('bg-green-900');
+  },
+
+  unmounted() {
+    document.documentElement.classList.remove('bg-green-900');
   },
 
   methods: {
@@ -171,10 +183,12 @@ export default {
       type RefKey = `${typeof field}Ref`;
       const field = e.property as keyof SignupData['validation'];
       const refKey: RefKey = `${field}Ref` as RefKey;
-      const parentRefs = this.$refs as any;
-      const childRefs = parentRefs[refKey].$refs;
+      const baseInput = this.$refs[refKey].$refs.input.$refs.baseInput;
       this.$data.validation[field] = false;
-      childRefs.input.focus();
+      const nestedError = e.children;
+      this.$data.errorMessage =
+        nestedError && nestedError.length > 0 ? Object.values(nestedError[0])[0] : Object.values(e.constraints!)[0];
+      baseInput.focus();
     },
   },
 };

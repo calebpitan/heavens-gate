@@ -16,7 +16,7 @@
             />
             <Input
               v-model="user.identifier.username"
-              :class="!validation.identifier ? 'focus:ring-red-500' : ''"
+              :class="!validation.identifier ? validationErrorClass : ''"
               ref="identifierRef"
               type="text"
               placeholder="Username or Email"
@@ -27,9 +27,10 @@
 
           <div class="">
             <InputLabel class="not-sr-only inline-block font-semibold mb-1" labelFor="pwd" label="Password" />
-            <Input
+            <PasswordInput
               v-model="user.password"
-              :class="!validation.password ? 'focus:ring-red-500' : ''"
+              :errored="!validation.password"
+              :errorClass="!validation.password ? validationErrorClass : ''"
               ref="passwordRef"
               type="password"
               placeholder="Password"
@@ -38,13 +39,8 @@
           </div>
 
           <div class="lg:col-span-2">
-            <Input
-              type="submit"
-              class="bg-black text-white font-semibold border-black shadow-2xl focus:ring-2 focus:ring-black hover:opacity-90 transition-all duration-150"
-              :style="{ borderColor: `black` }"
-              value="Sign In"
-            />
-            <div class="text-sm mt-4">
+            <Submit class="shadow-2xl" value="Sign In" />
+            <div class="text-center text-sm mt-4">
               Don't have an account? <router-link to="/signup" class="text-pink-700 font-semibold">Sign up</router-link>
             </div>
           </div>
@@ -64,10 +60,13 @@
 <script lang="ts">
 import { isEmail, validateOrReject, ValidationError } from 'class-validator';
 import GatePresentation from '../components/GatePresentation.vue';
-import FormOverlay from '../components/FormOverlay.vue';
-import InputLabel from '../components/InputLabel.vue';
-import Input from '../components/Input.vue';
-import Checkbox from '../components/Checkbox.vue';
+import FormOverlay from '../components/form/FormOverlay.vue';
+import InputLabel from '../components/input/InputLabel.vue';
+import PasswordInput from '../components/input/PasswordInput.vue';
+import Input from '../components/input/Input.vue';
+import Submit from '../components/input/Submit.vue';
+import Checkbox from '../components/input/Checkbox.vue';
+import Icon from '../components/Icon.vue';
 import { CredentialDto, Identifier } from '../services/auth/dto';
 import { AuthActionType, LoginActionPayload } from '../store/auth/types';
 import { copyIntoObject, resetValidation } from '../utils';
@@ -90,23 +89,35 @@ const swapIdentifierIfIsEmail = (identifier: Identifier) => {
 
 export default {
   name: 'Login',
-  components: { FormOverlay, Input, InputLabel, Checkbox, GatePresentation },
+  components: { FormOverlay, Input, InputLabel, Checkbox, Submit, GatePresentation, Icon, PasswordInput },
   data(): LoginData {
     const image = { backgroundImage: `url(${imageSrc})`, backgroundRepeat: `no-repeat` };
     const gateImage = { ...image, backgroundSize: `auto` };
     const presentationImage = { ...image, backgroundSize: `100% 100%` };
     const user = { identifier: { username: '', email: '' }, password: '' };
     const validation = { identifier: true, password: true };
-    return { user, validation, gateImage, presentationImage };
+    const validationErrorClass = 'focus:ring-red-500';
+    return { user, validation, gateImage, presentationImage, validationErrorClass };
+  },
+
+  mounted() {
+    document.documentElement.classList.add('bg-pink-900');
+  },
+
+  unmounted() {
+    document.documentElement.classList.remove('bg-pink-900');
   },
 
   methods: {
     async login(_evt: any) {
       const identifier = copyIntoObject(this.$data.user.identifier, Identifier);
       const user = copyIntoObject(this.$data.user, CredentialDto);
+
       user.identifier = identifier;
+
       swapIdentifierIfIsEmail(user.identifier);
       resetValidation(this.$data.validation);
+
       try {
         await validateOrReject(user);
         await this.$store.dispatch<LoginActionPayload>({ type: AuthActionType.LOGIN, payload: user });
@@ -120,10 +131,9 @@ export default {
       type RefKey = `${typeof field}Ref`;
       const field = e.property as keyof LoginData['validation'];
       const refKey: RefKey = `${field}Ref` as RefKey;
-      const parentRefs = this.$refs as any;
-      const childRefs = parentRefs[refKey].$refs;
+      const baseInput = this.$refs[refKey].$refs.input.$refs.baseInput;
       this.$data.validation[field] = false;
-      childRefs.input.focus();
+      baseInput.focus();
     },
   },
 };
