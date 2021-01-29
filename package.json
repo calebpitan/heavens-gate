@@ -21,12 +21,14 @@
     "axios": "^0.21.1",
     "bowser": "^2.11.0",
     "class-validator": "^0.13.1",
+    "feather-icons": "^4.28.0",
     "gsap": "^3.6.0",
     "vue": "^3.0.5",
     "vue-router": "4.0.0-alpha.11",
     "vuex": "^4.0.0-rc.2"
   },
   "devDependencies": {
+    "@types/feather-icons": "^4.7.0",
     "@types/node": "^14.14.22",
     "@vitejs/plugin-vue": "^1.0.4",
     "@vue/compiler-sfc": "^3.0.5",
