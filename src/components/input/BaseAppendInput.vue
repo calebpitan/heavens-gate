@@ -34,10 +34,10 @@ export default {
     let inputClass: string;
     let inputAppendClass: string;
     if (this.$props.before) {
-      inputClass = `order-last rounded-r-md pl-2 pr-4`;
+      inputClass = `order-last rounded-l-none rounded-r-md pl-2 pr-4`;
       inputAppendClass = `rounded-l-md pl-4 pr-2`;
     } else {
-      inputClass = `rounded-l-md pl-4 pr-2 `;
+      inputClass = `rounded-r-none rounded-l-md pl-4 pr-2 `;
       inputAppendClass = `rounded-r-md pl-2 pr-4`;
     }
     return { inputClass, inputAppendClass, value: this.$attrs.value || '', focused: false };
