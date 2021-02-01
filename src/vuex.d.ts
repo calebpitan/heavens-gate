@@ -1,4 +1,4 @@
-import { RouteLocationNormalized, Router } from 'vue-router';
+import { RouteLocationNormalizedLoaded, Router } from 'vue-router';
 import { ApplicationStore } from './store';
 
 declare module '@vue/runtime-core' {
@@ -6,7 +6,7 @@ declare module '@vue/runtime-core' {
   interface ComponentCustomProperties {
     $store: ApplicationStore;
     $router: Router;
-    $route: RouteLocationNormalized;
+    $route: RouteLocationNormalizedLoaded;
     $refs: Record<string, any>;
   }
 }
