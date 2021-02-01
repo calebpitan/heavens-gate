@@ -51,8 +51,9 @@ export default defineComponent({
 });
 </script>
 
-<style>
+<style lang="postcss">
 #app {
+  @apply h-full;
   -webkit-font-smoothing: antialiased;
   -moz-osx-font-smoothing: grayscale;
   color: #2c3e50;
