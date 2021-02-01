@@ -3,7 +3,7 @@ module.exports = {
     content: ['./src/**/*.html', './src/**/*.vue'],
     options: { keyframes: true },
   },
-  darkMode: false, // or 'media' or 'class'
+  darkMode: 'media', // or 'media' or 'class'
   theme: {
     extend: {},
   },
