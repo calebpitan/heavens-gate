@@ -14,6 +14,7 @@ const getIcon = ({ name, iconClass, strokeWidth, color }: GetIconOptions) => {
     class: iconClass,
     'stroke-width': strokeWidth,
     color: color,
+    'aria-hidden': 'true',
   });
   return IconSvg;
 };
@@ -22,7 +23,7 @@ export default {
   props: {
     name: String,
     iconClass: String,
-    strokeWidth: { type: String, default: 2 },
+    strokeWidth: { type: String, default: '2' },
     color: { type: String, default: 'currentColor' },
   },
   data() {
