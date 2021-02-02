@@ -22,7 +22,6 @@
           v-model="selected"
           @focus="handleFocus"
           @blur="handleBlur"
-          @keypress="filterOptions"
         />
         <Icon
           :class="`cursor-pointer text-xl ${!expanded && selected.length > 0 ? 'visible' : 'invisible'}`"
@@ -55,8 +54,8 @@
 
 <script lang="ts">
 import gsap from 'gsap';
-import { ref, watch } from 'vue';
 import cuid from 'cuid';
+import { ref, watch } from 'vue';
 import Icon from '../../components/Icon.vue';
 import { KeyCode } from '../../utils/keycode';
 
@@ -126,7 +125,6 @@ export default {
     },
 
     handleFocus() {
-      this.$data.activeDescendant = this.$data.activeDescendant ?? (this.listbox.children.item(0) as HTMLElement);
       this.$data.formerSelected = this.$data.selected;
       this.$data.formerActiveDescendant = this.$data.activeDescendant;
       this.$data.expanded = true;
@@ -139,15 +137,19 @@ export default {
       this.clear();
     },
 
-    filterOptions(_e: KeyboardEvent) {
-      const options = this.$props.options as string[];
-      const selected = this.$data.selected;
+    filterOptions(evt: KeyboardEvent) {
+      // Use setTimeout to run after the browser has painted
+      setTimeout(() => {
+        const target = evt.target as HTMLInputElement;
+        const options = this.$props.options as string[];
+        const selected = target.value.replace(/\\/g, '\\\\');
 
-      if (selected.length === 0) this.$data.filteredOptions = options;
+        if (selected.length === 0) return (this.$data.filteredOptions = options);
 
-      const pattern = new RegExp(selected, 'i');
-      const filtered = options.filter(option => option.match(pattern) !== null);
-      this.$data.filteredOptions = filtered;
+        const pattern = new RegExp(selected, 'i');
+        const filtered = options.filter(option => option.match(pattern) !== null);
+        this.$data.filteredOptions = filtered;
+      });
     },
 
     handleMouseOver(e: MouseEvent) {
@@ -157,13 +159,18 @@ export default {
 
     keyHandler(e: KeyboardEvent) {
       if (!this.$data.expanded) return;
+      const handled = (e: Event) => (e.stopImmediatePropagation(), e.preventDefault());
       switch (e.keyCode) {
         case KeyCode.DOWN: {
+          if (!this.$data.activeDescendant) {
+            this.$data.activeDescendant = this.listbox.children.item(0) as HTMLElement;
+            handled(e);
+            return;
+          }
           const active = this.$data.activeDescendant;
           const next = active.nextElementSibling as HTMLElement | null;
           this.$data.activeDescendant = next ?? active;
-          e.stopImmediatePropagation();
-          e.preventDefault();
+          handled(e);
           break;
         }
 
@@ -171,23 +178,20 @@ export default {
           const active = this.$data.activeDescendant;
           const prev = active.previousElementSibling as HTMLElement | null;
           this.$data.activeDescendant = prev ?? active;
-          e.stopImmediatePropagation();
-          e.preventDefault();
+          handled(e);
           break;
         }
 
         case KeyCode.ESCAPE: {
           this.close();
-          e.stopImmediatePropagation();
-          e.preventDefault();
+          handled(e);
           break;
         }
 
         case KeyCode.ENTER: {
           this.$data.selectedApproved = true;
           this.close();
-          e.stopImmediatePropagation();
-          e.preventDefault();
+          handled(e);
           break;
         }
       }
@@ -195,10 +199,12 @@ export default {
 
     registerKeyNav() {
       this.select.addEventListener('keydown', this.keyHandler, { capture: true });
+      this.select.addEventListener('keydown', this.filterOptions);
     },
 
     unregisterKeyNav() {
       this.select.removeEventListener('keydown', this.keyHandler, { capture: true });
+      this.select.removeEventListener('keydown', this.filterOptions);
     },
   },
 
@@ -272,10 +278,10 @@ export default {
 }
 
 .option-listitem {
-  @apply cursor-pointer block w-full px-4 py-2 overflow-hidden;
+  @apply cursor-pointer block w-full px-4 py-2 overflow-hidden focus:outline-none;
 }
 
 .option-listitem.active {
-  @apply bg-gray-300 dark:bg-gray-900 bg-opacity-70 focus:outline-none;
+  @apply bg-gray-300 dark:bg-gray-800 bg-opacity-70 focus:outline-none;
 }
 </style>
