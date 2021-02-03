@@ -1,5 +1,5 @@
 <template>
-  <label :for="labelFor" class="sr-only">{{ label }}<slot></slot></label>
+  <label :for="labelFor" class="sr-only font-semibold">{{ label }}<slot></slot></label>
 </template>
 
 <script>

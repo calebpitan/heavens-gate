@@ -1,5 +1,5 @@
 <template>
-  <div dir="auto">
+  <div :id="comboboxWrapperId" dir="auto" class="relative">
     <div
       :id="comboboxId"
       :aria-owns="listboxId"
@@ -10,6 +10,7 @@
     >
       <div class="flex items-center">
         <input
+          :id="id"
           class="searchable-input focus:outline-none"
           type="search"
           ref="select"
@@ -33,17 +34,23 @@
         </button>
       </div>
     </div>
-    <ul :id="listboxId" class="options-listbox" role="listbox" ref="listbox">
+    <ul
+      :id="listboxId"
+      class="options-listbox border-t border-gray-300 dark:border-gray-700"
+      role="listbox"
+      ref="listbox"
+    >
       <li class="option-listitem text-center" v-if="filteredOptions.length === 0">No option matches your search</li>
       <li
         :id="`${option}-option-${++i}`"
         :key="option"
         :aria-selected="selected === option"
+        :data-idx="--i"
         tabindex="-1"
         role="option"
         class="option-listitem"
         v-for="(option, i) in filteredOptions"
-        @click="(selected = option), (selectedApproved = true)"
+        @click="handleOptionClick"
         @mouseenter="handleMouseOver"
       >
         {{ option }}
@@ -57,14 +64,25 @@ import gsap from 'gsap';
 import cuid from 'cuid';
 import { ref, watch } from 'vue';
 import Icon from '../../components/Icon.vue';
-import { KeyCode } from '../../utils/keycode';
+import { KeyCode, killEvent } from '../../utils';
+
+export type Option = string;
+export enum Navigation {
+  CIRCULAR = 'circular',
+  LINEAR = 'linear',
+}
 
 export default {
   name: 'Select',
   components: { Icon },
   props: {
     title: { type: String, default: 'Search to filter' },
+    navigation: { type: String, default: Navigation.LINEAR },
+    id: { type: String, default: null },
     options: { type: Array, default: ['select'] },
+    onFold: { type: Function, default: () => null },
+    onUnfold: { type: Function, default: () => null },
+    onChange: { type: Function, default: () => null },
   },
 
   setup() {
@@ -73,7 +91,8 @@ export default {
     const dropdownButton = ref<HTMLButtonElement>(null!);
     const listboxId = cuid();
     const comboboxId = cuid();
-    return { select, listbox, listboxId, comboboxId, dropdownButton };
+    const comboboxWrapperId = cuid();
+    return { select, listbox, listboxId, comboboxId, comboboxWrapperId, dropdownButton };
   },
 
   data() {
@@ -115,8 +134,20 @@ export default {
       }
     },
 
+    approve() {
+      this.$data.selectedApproved = true;
+      this.$props.onChange(this.$data.selected);
+    },
+
+    handleOptionClick(e: MouseEvent) {
+      const target = e.currentTarget as HTMLElement;
+      this.$data.activeDescendant = target;
+      this.approve();
+      this.$data.expanded = false;
+    },
+
     handleButtonClick() {
-      !this.$data.expanded ? this.open() : this.close();
+      this.$data.expanded = !this.$data.expanded;
     },
 
     handleReset() {
@@ -130,10 +161,10 @@ export default {
       this.$data.expanded = true;
     },
 
-    handleBlur() {
-      // This prevent handleButtonClick and handleBlur from firing when button is clicked.
-      // In which handleBlur will fire before handleButtonClick and would eventually cause no change in state
-      setTimeout(() => (this.$data.expanded = false), 400);
+    handleBlur(e: FocusEvent) {
+      const focused = e.relatedTarget;
+      if (focused === this.dropdownButton || this.listbox.contains(focused as Node)) return;
+      this.$data.expanded = false;
       this.clear();
     },
 
@@ -159,39 +190,55 @@ export default {
 
     keyHandler(e: KeyboardEvent) {
       if (!this.$data.expanded) return;
-      const handled = (e: Event) => (e.stopImmediatePropagation(), e.preventDefault());
+      const navigation = this.$props.navigation as Navigation;
+      const items = this.listbox.children;
+
+      const getNextItem = (navigation: Navigation, items: HTMLCollection, active: HTMLElement, downward: boolean) => {
+        const maxOptionIndex = items.length - 1;
+        switch (navigation) {
+          case Navigation.CIRCULAR: {
+            const next = items.item(downward ? 0 : maxOptionIndex) as HTMLElement | null;
+            return next ?? active;
+          }
+          case Navigation.LINEAR:
+          default: {
+            return active;
+          }
+        }
+      };
+
       switch (e.keyCode) {
         case KeyCode.DOWN: {
           if (!this.$data.activeDescendant) {
             this.$data.activeDescendant = this.listbox.children.item(0) as HTMLElement;
-            handled(e);
-            return;
+            killEvent(e, true);
+            break;
           }
           const active = this.$data.activeDescendant;
           const next = active.nextElementSibling as HTMLElement | null;
-          this.$data.activeDescendant = next ?? active;
-          handled(e);
+          this.$data.activeDescendant = next ?? getNextItem(navigation, items, active, true);
+          killEvent(e, true);
           break;
         }
 
         case KeyCode.UP: {
           const active = this.$data.activeDescendant;
           const prev = active.previousElementSibling as HTMLElement | null;
-          this.$data.activeDescendant = prev ?? active;
-          handled(e);
+          this.$data.activeDescendant = prev ?? getNextItem(navigation, items, active, false);
+          killEvent(e, true);
           break;
         }
 
         case KeyCode.ESCAPE: {
           this.close();
-          handled(e);
+          killEvent(e, true);
           break;
         }
 
         case KeyCode.ENTER: {
-          this.$data.selectedApproved = true;
+          this.approve();
           this.close();
-          handled(e);
+          killEvent(e, true);
           break;
         }
       }
@@ -206,58 +253,66 @@ export default {
       this.select.removeEventListener('keydown', this.keyHandler, { capture: true });
       this.select.removeEventListener('keydown', this.filterOptions);
     },
+
+    registerFocus() {
+      // this.select.addEventListener('focus')
+    },
+
+    expand({ maxHeight }: { maxHeight: number }) {
+      const dropdownIcon = this.dropdownButton.firstChild;
+      this.registerKeyNav();
+      this.open();
+
+      gsap.to(dropdownIcon, { rotateZ: 180, transformOrigin: 'center', ease: 'power.out' });
+      gsap.set(this.listbox, { display: 'block', maxHeight: 0 });
+      gsap.to(this.listbox, {
+        onStart: () => this.$props.onUnfold(),
+        maxHeight: maxHeight,
+        ease: 'power.out',
+        duration: 0.3,
+        onComplete: () => gsap.set(this.listbox, { overflow: 'auto' }),
+      });
+    },
+
+    collapse() {
+      const dropdownIcon = this.dropdownButton.firstChild;
+      this.unregisterKeyNav();
+      this.close();
+
+      gsap.to(dropdownIcon, { rotateZ: 0, transformOrigin: 'center', ease: 'power.out' });
+      gsap.set(this.listbox, { overflow: 'hidden' });
+      gsap.to(this.listbox, {
+        maxHeight: 0,
+        ease: 'power.out',
+        duration: 0.2,
+        onComplete: () => {
+          gsap.set(this.listbox, { display: 'none' });
+          this.$props.onFold();
+        },
+      });
+    },
   },
 
   mounted() {
-    const dropdownIcon = this.dropdownButton.firstChild;
     const maxHeight = parseInt(getComputedStyle(this.listbox).maxHeight);
+    const expansionObserver = (expanded: boolean) => (expanded ? this.expand({ maxHeight }) : this.collapse());
+    const activeObserver = (to: HTMLElement | null, from: HTMLElement | null) => {
+      const options = this.$props.options as Option[];
+      if (from !== null) {
+        from.classList.remove('active');
+        from.setAttribute('tabindex', '-1');
+      }
+
+      if (to === null) return;
+
+      to.classList.add('active');
+      to.setAttribute('tabindex', '0');
+      this.$data.selected = options[Number(to.dataset.idx)];
+    };
+
     gsap.set(this.listbox, { display: 'none' });
-
-    watch(
-      () => this.$data.activeDescendant,
-      (to, from) => {
-        if (from !== null) {
-          from.classList.remove('active');
-          from.setAttribute('tabindex', '-1');
-        }
-
-        if (to === null) return;
-
-        to.classList.add('active');
-        to.setAttribute('tabindex', '0');
-        this.$data.selected = to.innerText;
-      },
-    );
-
-    watch(
-      () => this.$data.expanded,
-      expanded => {
-        if (expanded) {
-          this.registerKeyNav();
-          this.open();
-
-          gsap.to(dropdownIcon, { rotateZ: 180, transformOrigin: 'center', ease: 'power.out' });
-          gsap.set(this.listbox, { display: 'block', maxHeight: 0 });
-          gsap.to(this.listbox, {
-            maxHeight: maxHeight,
-            ease: 'power.out',
-            onComplete: () => gsap.set(this.listbox, { overflow: 'auto' }),
-          });
-          return;
-        }
-
-        this.unregisterKeyNav();
-        this.close();
-
-        gsap.to(dropdownIcon, { rotateZ: 0, transformOrigin: 'center', ease: 'power.out' });
-        gsap.set(this.listbox, { overflow: 'hidden' });
-        gsap.to(this.listbox, {
-          maxHeight: 0,
-          ease: 'power.out',
-          onComplete: () => gsap.set(this.listbox, { display: 'none' }),
-        });
-      },
-    );
+    watch(() => this.$data.activeDescendant, activeObserver);
+    watch(() => this.$data.expanded, expansionObserver);
   },
 };
 </script>
@@ -273,8 +328,9 @@ export default {
 }
 
 .options-listbox {
-  @apply overflow-auto relative rounded-md rounded-t-none;
+  @apply absolute w-full shadow-2xl overflow-auto rounded-md rounded-t-none;
   max-height: 250px;
+  background: inherit;
 }
 
 .option-listitem {

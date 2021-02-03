@@ -1,4 +1,5 @@
 import { AuthState } from '@/store/auth';
+export * from './keycode';
 
 export const getAuthFromStorage = () => {
   try {
@@ -18,6 +19,11 @@ export const getAuthFromStore = (store: AuthState) => {
 
 export const deepCopy = (o: Record<string, any>) => {
   return JSON.parse(JSON.stringify(o));
+};
+
+export const killEvent = (e: Event, immediate = false) => {
+  immediate ? e.stopImmediatePropagation() : e.stopPropagation();
+  e.preventDefault();
 };
 
 export function copyIntoObject<T extends Record<string, any>>(from: T, toCtr: new () => T): T {

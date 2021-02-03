@@ -52,11 +52,18 @@
     </div>
 
     <div class="bg-white dark:bg-gray-700 space-y-4 p-4 rounded-lg">
+      <InputLabel class="not-sr-only inline-block" labelFor="choose-store" label="Choose Store" />
       <Select
-        :options="['Great', 'Good', 'Frosty']"
+        id="choose-store"
+        :options="['Great', 'Good', 'Frosty', 'Graham\'s']"
         title="Choose a store"
-        class="bg-gray-100 dark:bg-gray-600 rounded-md"
+        :class="`bg-gray-100 dark:bg-gray-600 ${selectStateClass}`"
+        navigation="circular"
+        @fold="() => (selectStateClass = 'rounded-md')"
+        @unfold="() => (selectStateClass = 'rounded-t-md')"
+        @change="selection => (selected = selection)"
       />
+      aaskdj
     </div>
   </div>
 </template>
@@ -71,13 +78,15 @@ export default {
   components: { InputLabel, Input, TextArea, Select },
   name: 'New',
   data() {
+    const selectStateClass = 'rounded-md';
+    const selected = '';
     const item = {
       name: '',
       description: '',
       quantity: 1,
       price: 10.0,
     };
-    return { item };
+    return { item, selected, selectStateClass };
   },
 };
 </script>
