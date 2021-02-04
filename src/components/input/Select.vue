@@ -40,7 +40,9 @@
       role="listbox"
       ref="listbox"
     >
-      <li class="option-listitem text-center" v-if="filteredOptions.length === 0">No option matches your search</li>
+      <li class="option-listitem text-center" v-if="filteredOptions.length === 0">
+        <em>No option matches your search</em>
+      </li>
       <li
         :id="`${option}-option-${++i}`"
         :key="option"
@@ -92,7 +94,16 @@ export default {
     const listboxId = cuid();
     const comboboxId = cuid();
     const comboboxWrapperId = cuid();
-    return { select, listbox, listboxId, comboboxId, comboboxWrapperId, dropdownButton };
+    const inputStrokeAnimationFrameTimeout: number = null!;
+    return {
+      select,
+      listbox,
+      listboxId,
+      comboboxId,
+      comboboxWrapperId,
+      dropdownButton,
+      inputStrokeAnimationFrameTimeout,
+    };
   },
 
   data() {
@@ -115,6 +126,12 @@ export default {
   },
 
   methods: {
+    fold() {
+      this.$data.expanded = false;
+    },
+    unfold() {
+      this.$data.expanded = true;
+    },
     open() {
       this.$data.filteredOptions = this.$props.options as string[];
       this.$data.selectedApproved = false;
@@ -153,32 +170,36 @@ export default {
     handleReset() {
       this.$data.selected = '';
       this.$data.activeDescendant = null!;
+      this.unfold();
     },
 
     handleFocus() {
       this.$data.formerSelected = this.$data.selected;
       this.$data.formerActiveDescendant = this.$data.activeDescendant;
-      this.$data.expanded = true;
+      this.unfold();
     },
 
     handleBlur(e: FocusEvent) {
       const focused = e.relatedTarget;
       if (focused === this.dropdownButton || this.listbox.contains(focused as Node)) return;
-      this.$data.expanded = false;
+      this.fold();
       this.clear();
     },
 
-    filterOptions(evt: KeyboardEvent) {
-      // Use setTimeout to run after the browser has painted
-      setTimeout(() => {
+    filterOptions(evt: InputEvent) {
+      // Use requestAnimationFrame to run before the browser next repaint
+      const timeout = this.inputStrokeAnimationFrameTimeout;
+
+      if (timeout) window.cancelAnimationFrame(timeout);
+
+      this.inputStrokeAnimationFrameTimeout = window.requestAnimationFrame(() => {
         const target = evt.target as HTMLInputElement;
         const options = this.$props.options as string[];
-        const selected = target.value.replace(/\\/g, '\\\\');
+        const selected = target.value.trim().toLowerCase();
 
         if (selected.length === 0) return (this.$data.filteredOptions = options);
 
-        const pattern = new RegExp(selected, 'i');
-        const filtered = options.filter(option => option.match(pattern) !== null);
+        const filtered = options.filter(option => option.toLowerCase().match(selected) !== null);
         this.$data.filteredOptions = filtered;
       });
     },
@@ -244,23 +265,21 @@ export default {
       }
     },
 
-    registerKeyNav() {
+    registerKeyStroke() {
       this.select.addEventListener('keydown', this.keyHandler, { capture: true });
-      this.select.addEventListener('keydown', this.filterOptions);
+      // @ts-ignore
+      this.select.addEventListener('input', this.filterOptions);
     },
 
-    unregisterKeyNav() {
+    unregisterKeyStroke() {
       this.select.removeEventListener('keydown', this.keyHandler, { capture: true });
+      // @ts-ignore
       this.select.removeEventListener('keydown', this.filterOptions);
-    },
-
-    registerFocus() {
-      // this.select.addEventListener('focus')
     },
 
     expand({ maxHeight }: { maxHeight: number }) {
       const dropdownIcon = this.dropdownButton.firstChild;
-      this.registerKeyNav();
+      this.registerKeyStroke();
       this.open();
 
       gsap.to(dropdownIcon, { rotateZ: 180, transformOrigin: 'center', ease: 'power.out' });
@@ -276,7 +295,7 @@ export default {
 
     collapse() {
       const dropdownIcon = this.dropdownButton.firstChild;
-      this.unregisterKeyNav();
+      this.unregisterKeyStroke();
       this.close();
 
       gsap.to(dropdownIcon, { rotateZ: 0, transformOrigin: 'center', ease: 'power.out' });
@@ -328,7 +347,7 @@ export default {
 }
 
 .options-listbox {
-  @apply absolute w-full shadow-2xl overflow-auto rounded-md rounded-t-none;
+  @apply absolute z-10 w-full shadow-2xl overflow-auto rounded-md rounded-t-none;
   max-height: 250px;
   background: inherit;
 }

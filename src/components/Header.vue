@@ -1,5 +1,5 @@
 <template>
-  <div class="header">
+  <div class="header" ref="header">
     <header class="flex items-center">
       <div class="flex-grow">
         <button
